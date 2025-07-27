@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import {
+  Box,
   Card,
   CardContent,
   Typography,
-  Box,
   TextField,
+  InputAdornment,
   Button,
+  Chip,
+  Grid,
+  IconButton,
+  Badge,
+  Divider,
   List,
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  IconButton,
-  Divider,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,100 +23,50 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Paper,
-  InputAdornment,
-  Autocomplete,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Avatar,
-  Badge,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Search,
+  ShoppingCart,
   Add,
   Remove,
   Delete,
-  ShoppingCart,
   Payment,
+  Person,
   Receipt,
+  Close,
   QrCode,
   LocalOffer,
-  Person,
-  Phone,
-  Email,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Mock data
-const products = [
-  {
-    id: 1,
-    name: 'Paracetamol 500mg',
-    salt: 'Paracetamol',
-    manufacturer: 'Cipla',
-    mrp: 15,
-    sellingPrice: 12,
-    stock: 150,
-    category: 'Pain Relief',
-    barcode: '8901234567890',
-  },
-  {
-    id: 2,
-    name: 'Amoxicillin 250mg',
-    salt: 'Amoxicillin',
-    manufacturer: 'Sun Pharma',
-    mrp: 45,
-    sellingPrice: 38,
-    stock: 80,
-    category: 'Antibiotics',
-    barcode: '8901234567891',
-  },
-  {
-    id: 3,
-    name: 'Vitamin D3 1000IU',
-    salt: 'Cholecalciferol',
-    manufacturer: 'HealthVit',
-    mrp: 120,
-    sellingPrice: 95,
-    stock: 60,
-    category: 'Vitamins',
-    barcode: '8901234567892',
-  },
-  {
-    id: 4,
-    name: 'Omeprazole 20mg',
-    salt: 'Omeprazole',
-    manufacturer: 'Dr. Reddy\'s',
-    mrp: 85,
-    sellingPrice: 72,
-    stock: 40,
-    category: 'Gastrointestinal',
-    barcode: '8901234567893',
-  },
-];
-
-const paymentMethods = [
-  { id: 'cash', label: 'Cash', icon: '💵' },
-  { id: 'upi', label: 'UPI', icon: '📱' },
-  { id: 'card', label: 'Card', icon: '💳' },
-  { id: 'credit', label: 'Credit', icon: '📋' },
-];
+import { products, paymentMethods } from '../../data/mockData';
 
 interface CartItem {
-  product: any;
+  product: typeof products[0];
   quantity: number;
   total: number;
 }
 
-const Billing: React.FC = () => {
+const Billing = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
     email: '',
   });
-  const [activeStep, setActiveStep] = useState(0);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -121,60 +74,70 @@ const Billing: React.FC = () => {
     product.barcode.includes(searchQuery)
   );
 
-  const addToCart = (product: any) => {
-    const existingItem = cart.find(item => item.product.id === product.id);
-    if (existingItem) {
-      setCart(cart.map(item =>
-        item.product.id === product.id
-          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.product.sellingPrice }
-          : item
-      ));
-    } else {
-      setCart([...cart, {
-        product,
-        quantity: 1,
-        total: product.sellingPrice,
-      }]);
-    }
+  const addToCart = (product: typeof products[0]) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.product.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.product.sellingPrice }
+            : item
+        );
+      } else {
+        return [...prevCart, {
+          product,
+          quantity: 1,
+          total: product.sellingPrice
+        }];
+      }
+    });
   };
 
-  const updateQuantity = (productId: number, newQuantity: number) => {
+  const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      setCart(cart.filter(item => item.product.id !== productId));
-    } else {
-      setCart(cart.map(item =>
+      removeFromCart(productId);
+      return;
+    }
+    setCart(prevCart =>
+      prevCart.map(item =>
         item.product.id === productId
           ? { ...item, quantity: newQuantity, total: newQuantity * item.product.sellingPrice }
           : item
-      ));
-    }
+      )
+    );
   };
 
-  const removeFromCart = (productId: number) => {
-    setCart(cart.filter(item => item.product.id !== productId));
+  const removeFromCart = (productId: string) => {
+    setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
   };
 
-  const getSubtotal = () => cart.reduce((sum, item) => sum + item.total, 0);
-  const getGST = () => getSubtotal() * 0.18;
-  const getTotal = () => getSubtotal() + getGST();
+  const getStockStatus = (stock: number) => {
+    if (stock <= 0) return { label: 'Out of Stock', color: 'error' as const };
+    if (stock <= 10) return { label: `Stock: ${stock}`, color: 'warning' as const };
+    return { label: `Stock: ${stock}`, color: 'success' as const };
+  };
+
+  const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
+  const gst = subtotal * 0.18; // 18% GST
+  const total = subtotal + gst;
 
   const handlePayment = () => {
-    setShowPaymentDialog(true);
+    setPaymentDialogOpen(true);
   };
 
-  const handleCompletePayment = () => {
-    // Here you would integrate with actual payment gateway
-    setShowPaymentDialog(false);
+  const handlePaymentComplete = () => {
+    setPaymentDialogOpen(false);
     setCart([]);
     setActiveStep(0);
+    setPaymentMethod('');
     setCustomerInfo({ name: '', phone: '', email: '' });
-    setSelectedPaymentMethod('');
   };
 
   const steps = ['Cart Review', 'Customer Info', 'Payment'];
 
   return (
-    <Box>
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           Billing & POS
@@ -184,182 +147,248 @@ const Billing: React.FC = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-        {/* Left Side - Product Search and List */}
-        <Box sx={{ flex: '1 1 800px' }}>
-          <Card>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3 }}>
+        {/* Left Side - Products */}
+        <Box>
+          {/* Search Bar */}
+          <Card sx={{ mb: 3 }}>
             <CardContent>
-              <Box sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Search products by name, salt, or barcode..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {filteredProducts.map((product) => (
-                  <Box sx={{ flex: '1 1 300px', minWidth: 250 }} key={product.id}>
-                    <motion.div
-                      whileHover={{ y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Card
-                        sx={{
-                          cursor: 'pointer',
-                          '&:hover': { boxShadow: 3 },
-                        }}
-                        onClick={() => addToCart(product)}
-                      >
-                        <CardContent>
-                          <Typography variant="h6" noWrap>
-                            {product.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            {product.salt}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            {product.manufacturer}
-                          </Typography>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Typography variant="h6" color="primary" fontWeight="bold">
-                              ₹{product.sellingPrice}
-                            </Typography>
-                            <Chip
-                              label={`Stock: ${product.stock}`}
-                              size="small"
-                              color={product.stock < 20 ? 'error' : 'success'}
-                            />
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </Box>
-                ))}
+              <TextField
+                fullWidth
+                placeholder="Search products by name, salt, or barcode..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton size="small">
+                        <QrCode />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Chip label="All" color="primary" variant="filled" />
+                <Chip label="Pain Relief" variant="outlined" />
+                <Chip label="Antibiotics" variant="outlined" />
+                <Chip label="Vitamins" variant="outlined" />
               </Box>
             </CardContent>
           </Card>
+
+          {/* Products Grid */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(2, 1fr)' }, gap: 2 }}>
+            {filteredProducts.map((product) => {
+              const stockStatus = getStockStatus(product.currentStock);
+              return (
+                <motion.div
+                  key={product.id}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card
+                    sx={{
+                      cursor: 'pointer',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      '&:hover': {
+                        boxShadow: theme.shadows[8],
+                      },
+                    }}
+                    onClick={() => addToCart(product)}
+                  >
+                    <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="h6" fontWeight="bold" sx={{ fontSize: '1rem' }}>
+                          {product.name}
+                        </Typography>
+                        <Chip
+                          label={stockStatus.label}
+                          color={stockStatus.color}
+                          size="small"
+                          sx={{ fontSize: '0.7rem' }}
+                        />
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {product.manufacturer}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        {product.salt}
+                      </Typography>
+                      <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6" color="primary" fontWeight="bold">
+                          ₹{product.sellingPrice}
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<Add />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                          }}
+                          disabled={product.currentStock <= 0}
+                        >
+                          Add
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </Box>
         </Box>
 
-        {/* Right Side - Cart and Payment */}
-        <Box sx={{ flex: '0 0 400px' }}>
-          <Card sx={{ height: 'fit-content', position: 'sticky', top: 100 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <ShoppingCart sx={{ mr: 1 }} />
-                <Typography variant="h6">
-                  Cart ({cart.length} items)
+        {/* Right Side - Cart */}
+        <Card sx={{ height: 'fit-content', position: 'sticky', top: 100 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="h6" fontWeight="bold">
+                Cart
+              </Typography>
+              <Badge badgeContent={cart.length} color="primary">
+                <ShoppingCart />
+              </Badge>
+            </Box>
+
+            {cart.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <ShoppingCart sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  Your cart is empty
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Add products to get started
                 </Typography>
               </Box>
+            ) : (
+              <>
+                <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+                  <AnimatePresence>
+                    {cart.map((item) => (
+                      <motion.div
+                        key={item.product.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                      >
+                        <ListItem sx={{ px: 0 }}>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" fontWeight="500">
+                              {item.product.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              ₹{item.product.sellingPrice} × {item.quantity}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            >
+                              <Remove fontSize="small" />
+                            </IconButton>
+                            <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
+                              {item.quantity}
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            >
+                              <Add fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeFromCart(item.product.id)}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </ListItem>
+                        <ListItemSecondaryAction>
+                          <Typography variant="body2" fontWeight="bold">
+                            ₹{item.total}
+                          </Typography>
+                        </ListItemSecondaryAction>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </List>
 
-              {cart.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <ShoppingCart sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                  <Typography color="text.secondary">
-                    Your cart is empty
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-                    <AnimatePresence>
-                      {cart.map((item) => (
-                        <motion.div
-                          key={item.product.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 20 }}
-                        >
-                          <ListItem>
-                            <ListItemText
-                              primary={item.product.name}
-                              secondary={`₹${item.product.sellingPrice} × ${item.quantity}`}
-                            />
-                            <ListItemSecondaryAction>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                                >
-                                  <Remove />
-                                </IconButton>
-                                <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
-                                  {item.quantity}
-                                </Typography>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                >
-                                  <Add />
-                                </IconButton>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => removeFromCart(item.product.id)}
-                                >
-                                  <Delete />
-                                </IconButton>
-                              </Box>
-                            </ListItemSecondaryAction>
-                          </ListItem>
-                          <Divider />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </List>
+                <Divider sx={{ my: 2 }} />
 
-                  <Box sx={{ mt: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography>Subtotal:</Typography>
-                      <Typography>₹{getSubtotal().toFixed(2)}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography>GST (18%):</Typography>
-                      <Typography>₹{getGST().toFixed(2)}</Typography>
-                    </Box>
-                    <Divider sx={{ my: 1 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        Total:
-                      </Typography>
-                      <Typography variant="h6" fontWeight="bold" color="primary">
-                        ₹{getTotal().toFixed(2)}
-                      </Typography>
-                    </Box>
-
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      size="large"
-                      onClick={handlePayment}
-                      disabled={cart.length === 0}
-                    >
-                      Proceed to Payment
-                    </Button>
+                {/* Cart Summary */}
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Subtotal
+                    </Typography>
+                    <Typography variant="body2">
+                      ₹{subtotal.toFixed(2)}
+                    </Typography>
                   </Box>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      GST (18%)
+                    </Typography>
+                    <Typography variant="body2">
+                      ₹{gst.toFixed(2)}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="h6" fontWeight="bold">
+                      Total
+                    </Typography>
+                    <Typography variant="h6" fontWeight="bold" color="primary">
+                      ₹{total.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  startIcon={<Payment />}
+                  onClick={handlePayment}
+                  disabled={cart.length === 0}
+                >
+                  Proceed to Payment
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </Box>
 
       {/* Payment Dialog */}
       <Dialog
-        open={showPaymentDialog}
-        onClose={() => setShowPaymentDialog(false)}
-        maxWidth="md"
+        open={paymentDialogOpen}
+        onClose={() => setPaymentDialogOpen(false)}
+        maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Complete Payment</DialogTitle>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6" fontWeight="bold">
+              Complete Payment
+            </Typography>
+            <IconButton onClick={() => setPaymentDialogOpen(false)}>
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
         <DialogContent>
           <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
             {steps.map((label) => (
@@ -372,24 +401,25 @@ const Billing: React.FC = () => {
           {activeStep === 0 && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                Order Summary
+                Cart Review
               </Typography>
               <List>
                 {cart.map((item) => (
-                  <ListItem key={item.product.id}>
+                  <ListItem key={item.product.id} sx={{ px: 0 }}>
                     <ListItemText
                       primary={item.product.name}
-                      secondary={`₹${item.product.sellingPrice} × ${item.quantity}`}
+                      secondary={`${item.quantity} × ₹${item.product.sellingPrice}`}
                     />
-                    <Typography>₹{item.total.toFixed(2)}</Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      ₹{item.total}
+                    </Typography>
                   </ListItem>
                 ))}
               </List>
               <Divider sx={{ my: 2 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="h6">Total Amount:</Typography>
-                <Typography variant="h6" color="primary">
-                  ₹{getTotal().toFixed(2)}
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="h6" fontWeight="bold">
+                  Total: ₹{total.toFixed(2)}
                 </Typography>
               </Box>
             </Box>
@@ -400,31 +430,25 @@ const Billing: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Customer Information
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Customer Name"
-                    value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                  />
-                </Box>
-                <Box sx={{ flex: '1 1 200px' }}>
-                  <TextField
-                    fullWidth
-                    label="Phone Number"
-                    value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                  />
-                </Box>
-                <Box sx={{ flex: '1 1 200px' }}>
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                  />
-                </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Customer Name"
+                  value={customerInfo.name}
+                  onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                />
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  value={customerInfo.phone}
+                  onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                />
+                <TextField
+                  fullWidth
+                  label="Email (Optional)"
+                  value={customerInfo.email}
+                  onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                />
               </Box>
             </Box>
           )}
@@ -432,59 +456,52 @@ const Billing: React.FC = () => {
           {activeStep === 2 && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                Select Payment Method
+                Payment Method
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {paymentMethods.map((method) => (
-                  <Box sx={{ flex: '1 1 200px' }} key={method.id}>
-                    <Card
-                      sx={{
-                        cursor: 'pointer',
-                        border: selectedPaymentMethod === method.id ? 2 : 1,
-                        borderColor: selectedPaymentMethod === method.id ? 'primary.main' : 'divider',
-                      }}
-                      onClick={() => setSelectedPaymentMethod(method.id)}
-                    >
-                      <CardContent sx={{ textAlign: 'center' }}>
-                        <Typography variant="h4" sx={{ mb: 1 }}>
-                          {method.icon}
-                        </Typography>
-                        <Typography variant="body1">
-                          {method.label}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Box>
-                ))}
+              <FormControl fullWidth>
+                <InputLabel>Select Payment Method</InputLabel>
+                <Select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  label="Select Payment Method"
+                >
+                  {paymentMethods.map((method) => (
+                    <MenuItem key={method.id} value={method.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span>{method.icon}</span>
+                        {method.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Amount to be paid: <strong>₹{total.toFixed(2)}</strong>
+                </Typography>
               </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowPaymentDialog(false)}>
-            Cancel
+        <DialogActions sx={{ p: 3 }}>
+          <Button
+            onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
+            disabled={activeStep === 0}
+          >
+            Back
           </Button>
-          {activeStep > 0 && (
-            <Button onClick={() => setActiveStep(activeStep - 1)}>
-              Back
-            </Button>
-          )}
-          {activeStep < steps.length - 1 ? (
-            <Button
-              variant="contained"
-              onClick={() => setActiveStep(activeStep + 1)}
-            >
-              Next
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleCompletePayment}
-              disabled={!selectedPaymentMethod}
-            >
-              Complete Payment
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (activeStep === steps.length - 1) {
+                handlePaymentComplete();
+              } else {
+                setActiveStep(activeStep + 1);
+              }
+            }}
+          >
+            {activeStep === steps.length - 1 ? 'Complete Payment' : 'Next'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
