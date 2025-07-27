@@ -1,3 +1,11 @@
+import {
+  Search,
+  Add,
+  Edit,
+  Delete,
+  Person,
+  MedicalServices,
+} from '@mui/icons-material';
 import React, { useState } from 'react';
 import {
   Box,
@@ -20,20 +28,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import {
-  Search,
-  Add,
-  Edit,
-  Delete,
-  Person,
-  Phone,
-  Email,
-  LocationOn,
-  ShoppingCart,
-  Receipt,
-  MedicalServices,
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 
 // Mock data
 const customers = [

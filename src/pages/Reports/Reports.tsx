@@ -21,15 +21,15 @@ import {
   InputLabel,
 } from '@mui/material';
 import {
-  Assessment,
+  // Assessment,
   TrendingUp,
   TrendingDown,
   Download,
   Print,
-  DateRange,
+  // DateRange,
   AttachMoney,
   ShoppingCart,
-  Inventory,
+  // Inventory,
   Receipt,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -43,9 +43,9 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
+  // PieChart,
+  // Pie,
+  // Cell,
 } from 'recharts';
 
 // Mock data

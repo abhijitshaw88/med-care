@@ -36,7 +36,6 @@ import {
   Brightness4,
   LocalPharmacy,
   Person,
-  Close,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';

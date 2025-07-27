@@ -4,7 +4,7 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
+  // Grid,
   Chip,
   LinearProgress,
   Avatar,
@@ -15,8 +15,8 @@ import {
   Divider,
   Button,
   IconButton,
-  useTheme,
-  useMediaQuery,
+  // useTheme,
+  // useMediaQuery,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -42,8 +42,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
+  // BarChart,
+  // Bar,
 } from 'recharts';
 import { motion } from 'framer-motion';
 import {
@@ -105,8 +105,7 @@ const StatCard = ({ title, value, change, icon, color }: any) => {
 };
 
 const Dashboard = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // const theme = useTheme();
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>

@@ -26,8 +26,8 @@ import {
   MenuItem,
   LinearProgress,
   Avatar,
-  useTheme,
-  useMediaQuery,
+  // useTheme,
+  // useMediaQuery,
   Tabs,
   Tab,
 } from '@mui/material';
@@ -38,11 +38,11 @@ import {
   Delete,
   Inventory as InventoryIcon,
   Warning,
-  TrendingUp,
+  // TrendingUp,
   TrendingDown,
-  FilterList,
-  QrCode,
-  LocalOffer,
+  // FilterList,
+  // QrCode,
+  // LocalOffer,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { products, categories } from '../../data/mockData';
@@ -92,8 +92,8 @@ const Inventory = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [tabValue, setTabValue] = useState(0);
   const [addProductDialog, setAddProductDialog] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -308,7 +308,7 @@ const Inventory = () => {
 };
 
 const InventoryTable = ({ products }: { products: any[] }) => {
-  const theme = useTheme();
+  // const theme = useTheme();
 
   return (
     <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>

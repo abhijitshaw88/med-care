@@ -8,7 +8,7 @@ import {
   InputAdornment,
   Button,
   Chip,
-  Grid,
+  // Grid,
   IconButton,
   Badge,
   Divider,
@@ -27,9 +27,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Avatar,
+  // Avatar,
   useTheme,
-  useMediaQuery,
+  // useMediaQuery
 } from '@mui/material';
 import {
   Search,
@@ -38,11 +38,8 @@ import {
   Remove,
   Delete,
   Payment,
-  Person,
-  Receipt,
-  Close,
   QrCode,
-  LocalOffer,
+  Close,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { products, paymentMethods } from '../../data/mockData';
@@ -66,7 +63,7 @@ const Billing = () => {
   });
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

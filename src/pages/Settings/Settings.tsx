@@ -15,23 +15,23 @@ import {
   ListItemIcon,
   Avatar,
   Chip,
-  Tabs,
-  Tab,
+  // Tabs,
+  // Tab,
   Alert,
 } from '@mui/material';
 import {
-  Settings as SettingsIcon,
+  // Settings as SettingsIcon,
   Person,
   Security,
   Business,
   Notifications,
   Backup,
-  Language,
-  Palette,
-  Store,
-  Receipt,
-  Inventory,
-  Payment,
+  // Language,
+  // Palette,
+  // Store,
+  // Receipt,
+  // Inventory,
+  // Payment,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -44,15 +44,15 @@ const Settings: React.FC = () => {
     systemUpdates: true,
   });
 
-  const [businessSettings, setBusinessSettings] = useState({
-    shopName: 'MedShop Pro',
-    gstNumber: '27ABCDE1234F1Z5',
-    address: '123 Medical Street, Mumbai, Maharashtra - 400001',
-    phone: '+91 98765 43210',
-    email: 'contact@medshoppro.com',
-    currency: 'INR',
-    timezone: 'Asia/Kolkata',
-  });
+  // const [businessSettings, setBusinessSettings] = useState({
+  //   shopName: 'MedShop Pro',
+  //   gstNumber: '27ABCDE1234F1Z5',
+  //   address: '123 Medical Street, Mumbai, Maharashtra - 400001',
+  //   phone: '+91 98765 43210',
+  //   email: 'contact@medshoppro.com',
+  //   currency: 'INR',
+  //   timezone: 'Asia/Kolkata',
+  // });
 
   const users = [
     {
@@ -191,20 +191,20 @@ const Settings: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <TextField
                       label="Shop Name"
-                      value={businessSettings.shopName}
+                      value={''}
                       fullWidth
                       sx={{ flex: '1 1 300px' }}
                     />
                     <TextField
                       label="GST Number"
-                      value={businessSettings.gstNumber}
+                      value={''}
                       fullWidth
                       sx={{ flex: '1 1 300px' }}
                     />
                   </Box>
                   <TextField
                     label="Address"
-                    value={businessSettings.address}
+                    value={''}
                     fullWidth
                     multiline
                     rows={3}
@@ -213,24 +213,24 @@ const Settings: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
                     <TextField
                       label="Phone"
-                      value={businessSettings.phone}
+                      value={''}
                       sx={{ flex: '1 1 200px' }}
                     />
                     <TextField
                       label="Email"
-                      value={businessSettings.email}
+                      value={''}
                       sx={{ flex: '1 1 300px' }}
                     />
                   </Box>
                   <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
                     <TextField
                       label="Currency"
-                      value={businessSettings.currency}
+                      value={''}
                       sx={{ flex: '1 1 150px' }}
                     />
                     <TextField
                       label="Timezone"
-                      value={businessSettings.timezone}
+                      value={''}
                       sx={{ flex: '1 1 200px' }}
                     />
                   </Box>

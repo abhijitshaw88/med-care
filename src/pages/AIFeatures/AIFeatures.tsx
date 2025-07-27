@@ -1,3 +1,14 @@
+import {
+  CameraAlt,
+  AutoAwesome,
+  LocalOffer,
+  ShoppingCart,
+  HealthAndSafety,
+  WhatsApp,
+  QrCode,
+  CheckCircle,
+  Warning,
+} from '@mui/icons-material';
 import React, { useState } from 'react';
 import {
   Box,
@@ -12,7 +23,7 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Divider,
+  // Divider,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,23 +31,8 @@ import {
   Tabs,
   Tab,
   Alert,
-  LinearProgress,
+  // LinearProgress,
 } from '@mui/material';
-import {
-  Psychology,
-  CameraAlt,
-  AutoAwesome,
-  LocalOffer,
-  ShoppingCart,
-  HealthAndSafety,
-  Restaurant,
-  FitnessCenter,
-  WhatsApp,
-  QrCode,
-  Search,
-  CheckCircle,
-  Warning,
-} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 const AIFeatures: React.FC = () => {
